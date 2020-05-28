@@ -26,13 +26,12 @@ def add_new_records(cur_date):
 
     query = 'INSERT INTO sitedata (' + ', '.join(col) + ') VALUES (' + ', '.join(ques) + ')'
 
-    for row in temp_read():
+    for row in tqdm(temp_read()):
       values = [row[0], str(cur_date), row[2]]
       values.extend([-1]*30)
       cur.execute(query, tuple(values))
-      conn.commit()
       cur.execute('INSERT INTO siteinfo (url, embedding, cluster, rank) VALUES (?,?,?,?)', (row[0], row[1], -1, -1))
-      conn.commit()
+    conn.commit()
     
     print("Successfully added new records")
   except sqlite3.Error as error:
@@ -99,7 +98,7 @@ def update_cluster(clusters):
     cur = conn.cursor()
     
     for row in tqdm(clusters):
-      cur.execute('UPDATE siteinfo SET cluster=? WHERE url=?', (row[1], row[0]))
+      cur.execute('UPDATE siteinfo SET cluster=? WHERE url=?', (int(row[1]), row[0]))
 
     conn.commit()
     print("Successfully update cluster no.")
@@ -150,7 +149,6 @@ def get_keyword_dict(url):
       conn = sqlite3.connect(DB_PATH) 
       cur = conn.cursor()
       row = cur.execute('SELECT content from sitedata where url=?', (url,)).fetchone()
-    
       return { w.split(':')[0] : int(w.split(':')[1]) for w in row[0].split()}
 
     except sqlite3.Error as error:
